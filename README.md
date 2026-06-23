@@ -19,3 +19,29 @@ and on the recall accuracy i also got a 67% lol
 
 then the dust settled, i realized everything worked. W logistic regression.
 
+anyways here are the final parameters:
+
+Accuracy of Model : 67.57% 
+Recall: 67.67%
+
+Final Weights: 
+
+male: 0.4142
+age: 0.5631
+education: -0.0088
+currentSmoker: -0.1454
+cigsPerDay: 0.3011
+BPMeds: 0.2740
+prevalentStroke: 0.7070
+prevalentHyp: 0.3653
+diabetes: -0.0959
+totChol: 0.0701
+sysBP: 0.2041
+diaBP: -0.0210
+BMI: -0.0078
+heartRate: 0.0033
+glucose: 0.2011
+
+Final Bias: -2.19957
+
+
