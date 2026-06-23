@@ -1,0 +1,5 @@
+Honestly, Ill probably start work with just getting the data, shuffling it and just seperating train and test portions ig and then ill move onto feature scaling. i dont think feature engineering is really necessary here
+
+Shuffling really js works in the sense that every row is just randomly put in another row
+
+Realized there were empty ahh spots so filled them up (in the data hehe)
