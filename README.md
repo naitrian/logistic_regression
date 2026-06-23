@@ -44,4 +44,28 @@ glucose: 0.2011
 
 Final Bias: -2.19957
 
+Standard Deviations:
+
+age            8.548881
+education      1.008107
+cigsPerDay    11.880385
+totChol       44.556093
+sysBP         21.985431
+diaBP         11.884921
+BMI            4.111428
+heartRate     12.090265
+glucose       24.559457
+
+Means:
+
+age            49.580531
+education       1.984366
+cigsPerDay      8.900590
+totChol       237.332743
+sysBP         132.416224
+diaBP          82.858702
+BMI            25.809732
+heartRate      76.105310
+glucose        82.110324
+
 
