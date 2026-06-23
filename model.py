@@ -35,13 +35,24 @@ x_test_scaled[scaling_columns] = (x_test[scaling_columns]-train_means) / train_s
 
 x = x_train_scaled.values
 y = y_train.values
-iterations = 1000
+iterations = 100000
 m = len(x_train_scaled)
-learning_rate = 0.01
+learning_rate = 1
 w = np.zeros(15)
 b = 0 
 
 for i in range(iterations):
- g = np.dot(x_train_scaled, w) + b
+ g = np.dot(x, w) + b
  predictions = 1 / (1 + np.exp(-g))
  cost = -1/m * np.sum(y * np.log(predictions) + (1 - y) * np.log(1 - predictions))
+ error = predictions - y
+ w = w - (learning_rate/m) * np.dot(x.T, error)
+ b = b - (learning_rate/m) * np.sum(error)
+
+ if (i % 100 == 0 ):
+  print(f'At iteration {i} cost is: {cost}')
+
+print(f'Final Weights: {w}, final bias {b}')
+
+
+
