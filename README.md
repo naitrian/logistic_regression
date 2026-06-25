@@ -1,3 +1,5 @@
+-- TO SEE INTERACTIVE USER INTERFACE GO TO https://naitrian.github.io/logistic_regression/ --
+
 Basic logistic regression on the framingham dataset using pandas and numpy only.
 
 Features scaled using Z score normalization and gradient descent done to minimize the cost (came down to 0.37)
