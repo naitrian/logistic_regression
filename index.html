@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Risk Predictor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::selection { background-color: #e7e5e4; color: #1c1917; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        .fade-in {
+            animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-enter {
+            animation: resultEnter 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: scale(0.97) translateY(12px);
+        }
+        @keyframes resultEnter {
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .progress-bar {
+            animation: progressFill 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        @keyframes progressFill {
+            from { width: 0%; }
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1c1917;
+            background-color: #fafaf9;
+        }
+
+        .toggle-track {
+            width: 40px;
+            height: 24px;
+            border-radius: 12px;
+            background-color: #d6d3d1;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.25s ease;
+            flex-shrink: 0;
+        }
+        .toggle-track.active {
+            background-color: #1c1917;
+        }
+        .toggle-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        }
+        .toggle-track.active .toggle-thumb {
+            transform: translateX(16px);
+        }
+
+        .watermark {
+            position: fixed;
+            bottom: 20px;
+            right: 24px;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            color: #a8a29e;
+            text-transform: uppercase;
+            z-index: 50;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #78716c;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 font-sans text-stone-900 antialiased min-h-screen">
+
+    <div class="watermark">made by glm</div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 bg-stone-50/80 backdrop-blur-md border-b border-stone-200/60">
+        <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+            <a href="#" class="flex items-center gap-2.5">
+                <div class="w-8 h-8 bg-stone-900 rounded-lg flex items-center justify-center">
+                    <svg class="w-4 h-4 text-stone-50" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/>
+                    </svg>
+                </div>
+                <span class="font-medium text-sm tracking-tight">Heart Risk</span>
+            </a>
+            <div class="flex items-center gap-6">
+                <a href="#how-it-works" class="text-sm text-stone-500 hover:text-stone-900 transition-colors duration-150">How it works</a>
+                <a href="#about-model" class="text-sm text-stone-500 hover:text-stone-900 transition-colors duration-150">About</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-6 pt-32 pb-24">
+
+        <!-- Hero -->
+        <section class="mb-16 fade-in">
+            <p class="section-label mb-4">Framingham Heart Study</p>
+            <h1 class="font-serif text-4xl md:text-5xl font-normal tracking-tight leading-[1.1] mb-5">
+                Predict your 10-year<br>heart disease risk
+            </h1>
+            <p class="text-stone-500 text-lg font-light leading-relaxed max-w-xl">
+                Enter your health data below. Our logistic regression model—trained on over 3,000 patients from the Framingham dataset—will estimate your risk of a coronary heart disease event within the next decade.
+            </p>
+        </section>
+
+        <!-- Form -->
+        <form id="predictionForm" class="space-y-10 slide-up" style="animation-delay: 0.15s;" onsubmit="return false;">
+
+            <!-- Demographics -->
+            <div>
+                <p class="section-label mb-5">Demographics</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="male" class="block text-xs font-medium text-stone-600 mb-1.5">Sex</label>
+                        <select id="male" name="male" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 cursor-pointer">
+                            <option value="0">Female</option>
+                            <option value="1">Male</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="age" class="block text-xs font-medium text-stone-600 mb-1.5">Age <span class="text-stone-400 font-normal">(years)</span></label>
+                        <input type="number" id="age" name="age" placeholder="45" min="1" max="120" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="education" class="block text-xs font-medium text-stone-600 mb-1.5">Education <span class="text-stone-400 font-normal">(1–4)</span></label>
+                        <select id="education" name="education" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 cursor-pointer">
+                            <option value="1">1 — Some high school</option>
+                            <option value="2">2 — High school / GED</option>
+                            <option value="3" selected>3 — Some college</option>
+                            <option value="4">4 — College degree</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smoking -->
+            <div>
+                <p class="section-label mb-5">Smoking</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="currentSmoker" class="block text-xs font-medium text-stone-600 mb-1.5">Current smoker?</label>
+                        <select id="currentSmoker" name="currentSmoker" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 cursor-pointer">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="cigsPerDay" class="block text-xs font-medium text-stone-600 mb-1.5">Cigarettes per day</label>
+                        <input type="number" id="cigsPerDay" name="cigsPerDay" placeholder="0" min="0" max="100" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical History — uses hidden inputs + visual toggles -->
+            <div>
+                <p class="section-label mb-5">Medical History</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-4">
+
+                    <div class="flex items-center justify-between h-11 px-3.5 bg-white border border-stone-200 rounded-xl">
+                        <label class="text-sm text-stone-700 pointer-events-none">On BP medication</label>
+                        <input type="hidden" id="BPMeds" name="BPMeds" value="0">
+                        <div class="toggle-track" data-target="BPMeds" role="switch" aria-checked="false" tabindex="0">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between h-11 px-3.5 bg-white border border-stone-200 rounded-xl">
+                        <label class="text-sm text-stone-700 pointer-events-none">Previous stroke</label>
+                        <input type="hidden" id="prevalentStroke" name="prevalentStroke" value="0">
+                        <div class="toggle-track" data-target="prevalentStroke" role="switch" aria-checked="false" tabindex="0">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between h-11 px-3.5 bg-white border border-stone-200 rounded-xl">
+                        <label class="text-sm text-stone-700 pointer-events-none">Prevalent hypertension</label>
+                        <input type="hidden" id="prevalentHyp" name="prevalentHyp" value="0">
+                        <div class="toggle-track" data-target="prevalentHyp" role="switch" aria-checked="false" tabindex="0">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between h-11 px-3.5 bg-white border border-stone-200 rounded-xl">
+                        <label class="text-sm text-stone-700 pointer-events-none">Diabetes</label>
+                        <input type="hidden" id="diabetes" name="diabetes" value="0">
+                        <div class="toggle-track" data-target="diabetes" role="switch" aria-checked="false" tabindex="0">
+                            <div class="toggle-thumb"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Vitals & Labs -->
+            <div>
+                <p class="section-label mb-5">Vitals & Lab Results</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="totChol" class="block text-xs font-medium text-stone-600 mb-1.5">Total cholesterol <span class="text-stone-400 font-normal">(mg/dL)</span></label>
+                        <input type="number" id="totChol" name="totChol" placeholder="200" min="50" max="600" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="sysBP" class="block text-xs font-medium text-stone-600 mb-1.5">Systolic BP <span class="text-stone-400 font-normal">(mmHg)</span></label>
+                        <input type="number" id="sysBP" name="sysBP" placeholder="120" min="60" max="300" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="diaBP" class="block text-xs font-medium text-stone-600 mb-1.5">Diastolic BP <span class="text-stone-400 font-normal">(mmHg)</span></label>
+                        <input type="number" id="diaBP" name="diaBP" placeholder="80" min="30" max="200" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="BMI" class="block text-xs font-medium text-stone-600 mb-1.5">BMI <span class="text-stone-400 font-normal">(kg/m²)</span></label>
+                        <input type="number" id="BMI" name="BMI" placeholder="25" min="10" max="70" step="0.1" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="heartRate" class="block text-xs font-medium text-stone-600 mb-1.5">Heart rate <span class="text-stone-400 font-normal">(bpm)</span></label>
+                        <input type="number" id="heartRate" name="heartRate" placeholder="72" min="30" max="220" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                    <div>
+                        <label for="glucose" class="block text-xs font-medium text-stone-600 mb-1.5">Glucose <span class="text-stone-400 font-normal">(mg/dL)</span></label>
+                        <input type="number" id="glucose" name="glucose" placeholder="82" min="30" max="500" class="w-full h-11 px-3.5 bg-white border border-stone-200 rounded-xl text-sm transition-all duration-150 placeholder:text-stone-300">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error message area -->
+            <div id="formError" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3"></div>
+
+            <!-- Submit -->
+            <div class="pt-2">
+                <button type="button" id="submitBtn" class="w-full h-12 bg-stone-900 text-stone-50 text-sm font-medium rounded-xl hover:bg-stone-800 transition-colors duration-150 flex items-center justify-center gap-2">
+                    <span id="btnText">Calculate Risk</span>
+                    <svg id="btnArrow" class="w-4 h-4 transition-transform duration-150" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    <svg id="btnSpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                </button>
+            </div>
+        </form>
+
+        <!-- Result -->
+        <div id="resultSection" class="hidden mt-14"></div>
+
+        <!-- How it works -->
+        <section id="how-it-works" class="mt-24 pt-16 border-t border-stone-200">
+            <p class="section-label mb-4">How it works</p>
+            <h2 class="font-serif text-2xl tracking-tight mb-8">The prediction pipeline</h2>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-xs font-medium text-stone-500">1</div>
+                    <div>
+                        <p class="text-sm font-medium mb-1">You enter your health data</p>
+                        <p class="text-sm text-stone-500 font-light leading-relaxed">15 clinical features—demographics, smoking habits, medical history, and vitals—collected the same way the original Framingham study recorded them.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-xs font-medium text-stone-500">2</div>
+                    <div>
+                        <p class="text-sm font-medium mb-1">Values are standardized</p>
+                        <p class="text-sm text-stone-500 font-light leading-relaxed">Each continuous variable is scaled using the training set's mean and standard deviation, so the model sees data in the same distribution it learned from.</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-xs font-medium text-stone-500">3</div>
+                    <div>
+                        <p class="text-sm font-medium mb-1">Logistic regression computes your risk</p>
+                        <p class="text-sm text-stone-500 font-light leading-relaxed">A weighted sum of your features is passed through the sigmoid function, producing a probability between 0 and 1. If that probability exceeds the optimized threshold of 0.152, the prediction flips to "at risk."</p>
+                    </div>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center text-xs font-medium text-stone-500">4</div>
+                    <div>
+                        <p class="text-sm font-medium mb-1">You get a clear result</p>
+                        <p class="text-sm text-stone-500 font-light leading-relaxed">The raw probability and the binary prediction are shown, along with an explanation of what the numbers mean for you.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Model -->
+        <section id="about-model" class="mt-16 pt-16 border-t border-stone-200">
+            <p class="section-label mb-4">About the model</p>
+            <h2 class="font-serif text-2xl tracking-tight mb-8">Performance & limitations</h2>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div class="bg-white border border-stone-200 rounded-2xl p-6">
+                    <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Accuracy</p>
+                    <p class="text-3xl font-serif tracking-tight">67.57%</p>
+                    <p class="text-sm text-stone-500 font-light mt-2 leading-relaxed">Out of every 100 people this model evaluates, it gives the correct yes/no answer about 68 times. Think of it like a weather forecast that's right roughly 7 out of 10 days—not perfect, but meaningfully better than guessing.</p>
+                </div>
+                <div class="bg-white border border-stone-200 rounded-2xl p-6">
+                    <p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-2">Recall</p>
+                    <p class="text-3xl font-serif tracking-tight">67.67%</p>
+                    <p class="text-sm text-stone-500 font-light mt-2 leading-relaxed">Of all the people who will actually develop heart disease, this model correctly flags about 68% of them. The remaining ~32% get a false "you're fine" — which is why this tool is a conversation starter, not a diagnosis.</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-200/60 rounded-2xl p-6">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75h.007v.008H12v-.008z"/></svg>
+                    <div>
+                        <p class="text-sm font-medium text-amber-900 mb-1">Important disclaimer</p>
+                        <p class="text-sm text-amber-800/80 font-light leading-relaxed">This is an educational demonstration built on publicly available Framingham Heart Study data. It is <strong class="font-medium">not</strong> a medical device and should never replace professional medical advice. If you have concerns about your heart health, consult a cardiologist.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 space-y-3 text-sm text-stone-500 font-light leading-relaxed">
+                <p><strong class="font-medium text-stone-700">Dataset:</strong> Framingham Heart Study — a long-term cardiovascular cohort study that began in 1948 in Framingham, Massachusetts.</p>
+                <p><strong class="font-medium text-stone-700">Algorithm:</strong> Logistic regression with gradient descent (10,000 iterations, learning rate 1.0). No external ML libraries — trained from scratch with NumPy.</p>
+                <p><strong class="font-medium text-stone-700">Train/test split:</strong> 80/20, randomly shuffled. Missing values filled with training medians. Continuous features standardized using training-set statistics.</p>
+                <p><strong class="font-medium text-stone-700">Decision threshold:</strong> 0.152 (optimized for recall rather than default 0.5, since missing a true positive is far more dangerous than a false alarm in medical contexts).</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-stone-200 py-8">
+        <div class="max-w-3xl mx-auto px-6 flex items-center justify-between">
+            <p class="text-xs text-stone-400">Built for educational purposes only</p>
+            <p class="text-xs text-stone-400">Framingham Heart Study dataset</p>
+        </div>
+    </footer>
+
+    <script>
+        // ── Model Parameters ──
+        const WEIGHTS = [
+            0.4142,   // 0  male
+            0.5631,   // 1  age
+            -0.0088,  // 2  education
+            -0.1454,  // 3  currentSmoker
+            0.3011,   // 4  cigsPerDay
+            0.2740,   // 5  BPMeds
+            0.7070,   // 6  prevalentStroke
+            0.3653,   // 7  prevalentHyp
+            -0.0959,  // 8  diabetes
+            0.0701,   // 9  totChol
+            0.2041,   // 10 sysBP
+            -0.0210,  // 11 diaBP
+            -0.0078,  // 12 BMI
+            0.0033,   // 13 heartRate
+            0.2011    // 14 glucose
+        ];
+        const BIAS = -2.19957;
+        const THRESHOLD = 0.152;
+
+        // Which indices get scaled, and their train stats
+        const SCALE_MAP = {
+            1:  { mean: 49.580531, std: 8.548881 },   // age
+            2:  { mean: 1.984366,  std: 1.008107 },   // education
+            4:  { mean: 8.900590,  std: 11.880385 },  // cigsPerDay
+            9:  { mean: 237.332743,std: 44.556093 },  // totChol
+            10: { mean: 132.416224,std: 21.985431 },  // sysBP
+            11: { mean: 82.858702, std: 11.884921 },  // diaBP
+            12: { mean: 25.809732, std: 4.111428 },   // BMI
+            13: { mean: 76.105310, std: 12.090265 },  // heartRate
+            14: { mean: 82.110324, std: 24.559457 }   // glucose
+        };
+
+        const FEATURE_NAMES = [
+            'Male sex', 'Age', 'Education', 'Current smoker',
+            'Cigarettes/day', 'BP medication', 'Previous stroke',
+            'Hypertension', 'Diabetes', 'Total cholesterol',
+            'Systolic BP', 'Diastolic BP', 'BMI', 'Heart rate', 'Glucose'
+        ];
+
+        // ── Toggle Logic ──
+        // Each .toggle-track div has data-target pointing to a hidden input's id.
+        // Clicking the track flips the hidden input's value between 0 and 1.
+        document.querySelectorAll('.toggle-track').forEach(track => {
+            function doToggle() {
+                const hiddenInput = document.getElementById(track.dataset.target);
+                if (!hiddenInput) return;
+                const newVal = hiddenInput.value === '0' ? '1' : '0';
+                hiddenInput.value = newVal;
+                if (newVal === '1') {
+                    track.classList.add('active');
+                    track.setAttribute('aria-checked', 'true');
+                } else {
+                    track.classList.remove('active');
+                    track.setAttribute('aria-checked', 'false');
+                }
+            }
+            track.addEventListener('click', doToggle);
+            track.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    doToggle();
+                }
+            });
+        });
+
+        // ── Field IDs in model weight order ──
+        const FIELD_IDS = [
+            'male', 'age', 'education', 'currentSmoker', 'cigsPerDay',
+            'BPMeds', 'prevalentStroke', 'prevalentHyp', 'diabetes',
+            'totChol', 'sysBP', 'diaBP', 'BMI', 'heartRate', 'glucose'
+        ];
+
+        // Which fields require manual number input (not select, not hidden)
+        const NUMBER_FIELDS = new Set(['age', 'cigsPerDay', 'totChol', 'sysBP', 'diaBP', 'BMI', 'heartRate', 'glucose']);
+
+        // ── Submit ──
+        document.getElementById('submitBtn').addEventListener('click', function () {
+            var errorDiv = document.getElementById('formError');
+            var resultSection = document.getElementById('resultSection');
+            errorDiv.classList.add('hidden');
+            resultSection.classList.add('hidden');
+
+            // Collect raw values in weight order
+            var rawValues = [];
+            var missingLabels = [];
+
+            for (var i = 0; i < FIELD_IDS.length; i++) {
+                var id = FIELD_IDS[i];
+                var el = document.getElementById(id);
+                if (!el) { missingLabels.push(id); continue; }
+
+                var tag = el.tagName;
+                if (tag === 'INPUT' && el.type === 'hidden') {
+                    // Toggle field — always has a value
+                    rawValues.push(parseFloat(el.value));
+                } else if (tag === 'SELECT') {
+                    rawValues.push(parseFloat(el.value));
+                } else {
+                    // Number input
+                    var val = el.value.trim();
+                    if (val === '') {
+                        var label = el.parentElement.querySelector('label');
+                        var labelText = label ? label.textContent.replace(/\s*\(.*\)\s*/, '').trim() : id;
+                        missingLabels.push(labelText);
+                    } else {
+                        rawValues.push(parseFloat(val));
+                    }
+                }
+            }
+
+            if (missingLabels.length > 0) {
+                errorDiv.innerHTML = 'Please fill in: <strong>' + missingLabels.join(', ') + '</strong>';
+                errorDiv.classList.remove('hidden');
+                errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+
+            // Loading state
+            var btnText = document.getElementById('btnText');
+            var btnArrow = document.getElementById('btnArrow');
+            var btnSpinner = document.getElementById('btnSpinner');
+            btnText.textContent = 'Calculating...';
+            btnArrow.classList.add('hidden');
+            btnSpinner.classList.remove('hidden');
+
+            setTimeout(function () {
+                try {
+                    var result = predict(rawValues);
+                    renderResult(result, rawValues);
+                } catch (err) {
+                    errorDiv.innerHTML = 'Something went wrong: ' + err.message;
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                btnText.textContent = 'Calculate Risk';
+                btnArrow.classList.remove('hidden');
+                btnSpinner.classList.add('hidden');
+            }, 600);
+        });
+
+        function predict(rawValues) {
+            // Scale the appropriate features
+            var scaled = rawValues.slice();
+            for (var idx in SCALE_MAP) {
+                var s = SCALE_MAP[idx];
+                scaled[idx] = (rawValues[idx] - s.mean) / s.std;
+            }
+
+            // z = w·x + b
+            var z = BIAS;
+            for (var i = 0; i < WEIGHTS.length; i++) {
+                z += WEIGHTS[i] * scaled[i];
+            }
+
+            // Sigmoid
+            var probability = 1 / (1 + Math.exp(-z));
+            var prediction = probability >= THRESHOLD;
+
+            return { probability: probability, prediction: prediction, z: z, scaled: scaled };
+        }
+
+        function renderResult(result, rawValues) {
+            var pct = (result.probability * 100).toFixed(1);
+            var isAtRisk = result.prediction;
+
+            // ── Top contributing factors ──
+            var contributions = [];
+            for (var i = 0; i < WEIGHTS.length; i++) {
+                var contrib = WEIGHTS[i] * result.scaled[i];
+                contributions.push({
+                    name: FEATURE_NAMES[i],
+                    contribution: contrib,
+                    absContribution: Math.abs(contrib),
+                    direction: contrib > 0 ? 'increases' : 'decreases'
+                });
+            }
+            contributions.sort(function (a, b) { return b.absContribution - a.absContribution; });
+            var topFactors = contributions.slice(0, 4).filter(function (f) { return f.absContribution > 0.005; });
+
+            var factorHTML = '';
+            for (var j = 0; j < topFactors.length; j++) {
+                var f = topFactors[j];
+                var colorClass = f.direction === 'increases' ? 'text-red-500' : 'text-emerald-600';
+                var arrow = f.direction === 'increases' ? '↑ Raises risk' : '↓ Lowers risk';
+                factorHTML += '<div class="flex items-center justify-between py-2.5 border-b border-stone-100 last:border-0">' +
+                    '<span class="text-sm text-stone-700">' + f.name + '</span>' +
+                    '<span class="text-xs font-medium ' + colorClass + '">' + arrow + '</span>' +
+                    '</div>';
+            }
+
+            var topFactorsBlock = topFactors.length > 0 ?
+                '<div class="px-8 py-6 border-b border-stone-100">' +
+                '<p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">Top factors influencing your result</p>' +
+                factorHTML +
+                '</div>' : '';
+
+            // Icons
+            var riskIcon = isAtRisk ?
+                '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75h.007v.008H12v-.008z"/></svg>' :
+                '<svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>';
+
+            var iconBg = isAtRisk ? 'bg-red-50' : 'bg-emerald-50';
+            var barColor = isAtRisk ? 'bg-red-400' : 'bg-emerald-400';
+            var barWidth = Math.min(parseFloat(pct), 100);
+
+            var plainEnglish = isAtRisk ?
+                'The model thinks there is a meaningful chance you could experience a coronary heart disease event (like a heart attack) within the next 10 years. This does <strong class="font-medium">not</strong> mean it will happen — it means your combination of factors resembles people in the study who did go on to develop heart disease. You should discuss this with a doctor, who can look at the full picture.' :
+                'Based on the factors you entered, your profile resembles people in the Framingham study who mostly did <strong class="font-medium">not</strong> develop heart disease over 10 years. That\'s encouraging, but it\'s not a guarantee. Keep up healthy habits and see your doctor for regular checkups.';
+
+            var thresholdNote = isAtRisk ?
+                'The model\'s decision threshold is ' + THRESHOLD + '. Your probability of <strong class="text-stone-600">' + pct + '%</strong> is above this threshold, so the prediction is <strong class="text-stone-600">"at risk"</strong>.' :
+                'The model\'s decision threshold is ' + THRESHOLD + '. Your probability of <strong class="text-stone-600">' + pct + '%</strong> is below this threshold, so the prediction is <strong class="text-stone-600">"not at risk"</strong>.';
+
+            var html =
+                '<div class="result-enter">' +
+                    '<div class="bg-white border border-stone-200 rounded-2xl overflow-hidden">' +
+
+                        // Header
+                        '<div class="p-8 pb-6 border-b border-stone-100">' +
+                            '<div class="flex items-start justify-between mb-6">' +
+                                '<div>' +
+                                    '<p class="section-label mb-2">Your Result</p>' +
+                                    '<h2 class="font-serif text-2xl tracking-tight">' +
+                                        (isAtRisk ? 'Elevated 10-year risk' : 'Low 10-year risk') +
+                                    '</h2>' +
+                                '</div>' +
+                                '<div class="w-12 h-12 rounded-2xl ' + iconBg + ' flex items-center justify-center flex-shrink-0">' +
+                                    riskIcon +
+                                '</div>' +
+                            '</div>' +
+
+                            // Probability bar
+                            '<div class="mb-4">' +
+                                '<div class="flex items-baseline justify-between mb-2">' +
+                                    '<span class="text-4xl font-serif tracking-tight">' + pct + '%</span>' +
+                                    '<span class="text-xs text-stone-400">model probability</span>' +
+                                '</div>' +
+                                '<div class="w-full h-2 bg-stone-100 rounded-full overflow-hidden">' +
+                                    '<div class="h-full rounded-full progress-bar ' + barColor + '" style="width: ' + barWidth + '%"></div>' +
+                                '</div>' +
+                                '<div class="flex justify-between mt-1.5">' +
+                                    '<span class="text-[10px] text-stone-400">0%</span>' +
+                                    '<span class="text-[10px] text-stone-400">100%</span>' +
+                                '</div>' +
+                            '</div>' +
+
+                            '<p class="text-xs text-stone-400 leading-relaxed">' + thresholdNote + '</p>' +
+                        '</div>' +
+
+                        // Plain English
+                        '<div class="px-8 py-6 bg-stone-50/50 border-b border-stone-100">' +
+                            '<p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">What this means in plain English</p>' +
+                            '<p class="text-sm text-stone-600 font-light leading-relaxed">' + plainEnglish + '</p>' +
+                        '</div>' +
+
+                        // Top factors
+                        topFactorsBlock +
+
+                        // Trust context
+                        '<div class="px-8 py-6">' +
+                            '<p class="text-xs font-medium text-stone-400 uppercase tracking-wider mb-3">How much to trust this number</p>' +
+                            '<div class="grid grid-cols-2 gap-4">' +
+                                '<div>' +
+                                    '<p class="text-lg font-serif tracking-tight">67.6%</p>' +
+                                    '<p class="text-xs text-stone-500 font-light mt-0.5">Overall accuracy — right roughly 7 out of 10 times</p>' +
+                                '</div>' +
+                                '<div>' +
+                                    '<p class="text-lg font-serif tracking-tight">67.7%</p>' +
+                                    '<p class="text-xs text-stone-500 font-light mt-0.5">Recall — catches ~7 of 10 people who are actually at risk</p>' +
+                                '</div>' +
+                            '</div>' +
+                            '<p class="text-xs text-stone-400 font-light leading-relaxed mt-3">' +
+                                'In plain terms: if 100 people use this tool, about 32 will get a wrong answer. Of the people who truly are at risk, about 32 will be incorrectly told they\'re fine. Treat this as a starting point for a conversation with your doctor, not a definitive answer.' +
+                            '</p>' +
+                        '</div>' +
+
+                    '</div>' +
+
+                    // Recalculate link
+                    '<button onclick="window.scrollTo({top:0,behavior:\'smooth\'})" class="mt-4 text-sm text-stone-500 hover:text-stone-900 transition-colors duration-150 flex items-center gap-1.5 mx-auto">' +
+                        '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>' +
+                        'Enter different values' +
+                    '</button>' +
+                '</div>';
+
+            var resultSection = document.getElementById('resultSection');
+            resultSection.innerHTML = html;
+            resultSection.classList.remove('hidden');
+            setTimeout(function () {
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+
+        // ── Smooth scroll for nav links ──
+        document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+            link.addEventListener('click', function (e) {
+                e.preventDefault();
+                var target = document.querySelector(link.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    </script>
+
+</body>
+</html>
